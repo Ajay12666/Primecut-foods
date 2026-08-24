@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrimeCut Foods | B2B Chicken Pickup</title>
+<style>
+:root{--red:#d71920;--dark:#111;--muted:#666;--bg:#f6f6f6}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#111}
+header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #ddd;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:24px;font-weight:900;color:var(--red)} .logo small{display:block;font-size:10px;letter-spacing:2px;color:#222}
+.cart{background:#111;color:#fff;border:0;border-radius:22px;padding:10px 15px;font-weight:700}
+.hero{background:linear-gradient(135deg,#111,#2b2b2b);color:#fff;padding:28px 18px}
+.hero h1{margin:0 0 8px;font-size:30px}.hero p{margin:6px 0;color:#ddd}
+.badge{display:inline-block;background:var(--red);padding:7px 10px;border-radius:8px;font-weight:700;font-size:12px;margin-top:10px}
+.wrap{max-width:1100px;margin:auto;padding:18px}
+h2{font-size:22px;margin:8px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.card{background:#fff;border:1px solid #ddd;border-radius:15px;overflow:hidden;box-shadow:0 2px 8px #0000000d}
+.pic{height:145px;background:#eee;display:flex;align-items:center;justify-content:center;font-size:52px}
+.card-body{padding:14px}.name{font-weight:800;font-size:18px}.desc{font-size:12px;color:var(--muted);margin:5px 0 10px}
+.price{font-size:20px;font-weight:900}.unit{font-size:12px;color:#777}
+.qty{display:flex;align-items:center;gap:10px;margin-top:12px}.qty button{width:34px;height:34px;border:0;border-radius:9px;background:#111;color:#fff;font-size:20px}.qty span{min-width:35px;text-align:center;font-weight:800}
+.limit{font-size:11px;color:#777;margin-top:6px}
+.order{margin-top:22px;background:#fff;border-radius:15px;padding:18px;border:1px solid #ddd}
+input,textarea{width:100%;padding:12px;border:1px solid #ccc;border-radius:9px;margin:6px 0 10px;font-size:15px}
+textarea{min-height:75px;resize:vertical}
+.total{font-size:24px;font-weight:900;margin:12px 0}
+.wa{width:100%;padding:15px;border:0;border-radius:10px;background:#25D366;color:#fff;font-size:17px;font-weight:900}
+.support{margin:14px 0 30px;text-align:center;font-size:14px}.support a{color:var(--red);font-weight:800;text-decoration:none}
+footer{text-align:center;background:#111;color:#bbb;padding:22px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">PRIMECUT<small>B2B CHICKEN FOODS</small></div>
+  <button class="cart" onclick="document.getElementById('order').scrollIntoView({behavior:'smooth'})">Order Summary 🛒</button>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <h1>Fresh Chicken. B2B Rates.</h1>
+    <p>Order online and <b>pick up from our location.</b></p>
+    <span class="badge">PICKUP ONLY • NO DELIVERY</span>
+  </div>
+</section>
+
+<main class="wrap">
+<h2>Shop Products</h2>
+<div class="grid" id="products"></div>
+
+<section class="order" id="order">
+<h2>Pickup Order</h2>
+<label>Your Name</label><input id="customer" placeholder="Enter your name">
+<label>Pickup Date / Time</label><input id="pickup" placeholder="e.g. Tomorrow 8:00 AM">
+<label>Notes</label><textarea id="notes" placeholder="Cutting or packing instructions"></textarea>
+<div class="total">Total: ₹<span id="total">0</span></div>
+<button class="wa" onclick="sendWhatsApp()">Send Order on WhatsApp</button>
+</section>
+
+<div class="support">Customer Support: <a href="https://wa.me/919395315241" target="_blank">WhatsApp +91 93953 15241</a></div>
+</main>
+<footer>© 2026 PrimeCut Foods • B2B Chicken Pickup</footer>
+
+<script>
+const WHATSAPP="919395315241";
+const products=[
+ {name:"Curry Cut",price:225,max:20,emoji:"🍗",desc:"Fresh raw curry-cut chicken"},
+ {name:"Boneless",price:305,max:5,emoji:"🥩",desc:"Fresh boneless chicken with skin"},
+ {name:"Breast With Bone",price:245,max:5,emoji:"🍗",desc:"Fresh breast piece with bone"},
+ {name:"Legs",price:240,max:5,emoji:"🍗",desc:"Single fresh raw leg piece"},
+ {name:"Wings",price:240,max:5,emoji:"🍗",desc:"Fresh raw chicken wings"},
+ {name:"Liver + Gizzard",price:160,max:5,emoji:"🫀",desc:"Fresh liver and gizzard together"}
+];
+const cart={};
+function render(){
+ const box=document.getElementById("products");
+ box.innerHTML=products.map((p,i)=>`
+ <div class="card">
+   <div class="pic">${p.emoji}</div>
+   <div class="card-body">
+    <div class="name">${p.name}</div>
+    <div class="desc">${p.desc}</div>
+    <div class="price">₹${p.price}<span class="unit"> / kg</span></div>
+    <div class="qty">
+      <button onclick="change(${i},-1)">−</button><span id="q${i}">0 kg</span><button onclick="change(${i},1)">+</button>
+    </div>
+    <div class="limit">Maximum ${p.max} kg</div>
+   </div>
+ </div>`).join("");
+}
+function change(i,d){
+ const p=products[i]; cart[i]=Math.max(0,Math.min(p.max,(cart[i]||0)+d)); 
+ document.getElementById("q"+i).textContent=cart[i]+" kg"; calc();
+}
+function calc(){
+ let t=0; products.forEach((p,i)=>t+=(cart[i]||0)*p.price);
+ document.getElementById("total").textContent=t.toLocaleString("en-IN");
+ return t;
+}
+function sendWhatsApp(){
+ const name=document.getElementById("customer").value.trim();
+ const pickup=document.getElementById("pickup").value.trim();
+ const notes=document.getElementById("notes").value.trim();
+ if(!name){alert("Please enter your name.");return}
+ let lines=[];
+ products.forEach((p,i)=>{if(cart[i]) lines.push(`${p.name}: ${cart[i]} kg × ₹${p.price} = ₹${cart[i]*p.price}`)});
+ if(!lines.length){alert("Please select at least one product.");return}
+ const total=calc();
+ const msg=`*PRIMECUT FOODS – B2B PICKUP ORDER*%0A%0ACustomer: ${encodeURIComponent(name)}%0APickup: ${encodeURIComponent(pickup||"To be confirmed")}%0A%0A${lines.map(encodeURIComponent).join("%0A")}%0A%0A*TOTAL: ₹${total}*%0A%0ANotes: ${encodeURIComponent(notes||"None")}%0A%0A_Pickup only – no delivery_`;
+ window.open(`https://wa.me/${WHATSAPP}?text=${msg}`,"_blank");
+}
+render();
+</script>
+</body>
+</html>
